@@ -1,0 +1,59 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvtap
+  annotations:
+     k8s.v1.cni.cncf.io/resourceName: macvtap.network.kubevirt.io/eth0
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvtap",
+      "master": "eth0",
+      "mode": "bridge",
+      "ipam": { "type": "host-local", "ranges": [ [{"subnet": "203.0.113.0/24"}] ] }
+    }'
+---
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstance
+metadata:
+  name: vmi-multus-macvtap
+  labels:
+    debugLogs: ""
+spec:
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: rootfs
+      - disk:
+          bus: virtio
+        name: cloudinit
+      interfaces:
+      - masquerade: {}
+        name: default
+        ports:
+        - name: ssh
+          port: 22
+      - macvtap: {}
+        name: macvtap
+        macAddress: 02:03:04:05:06:07
+    machine:
+      type: q35
+    resources:
+      requests:
+        memory: 64M
+  networks:
+  - name: default
+    pod: {}
+  - multus:
+      networkName: macvtap
+    name: macvtap
+  volumes:
+  - containerDisk:
+      image: kubevirt/cirros-registry-disk-demo
+      imagePullPolicy: Always
+    name: rootfs
+  - cloudInitNoCloud:
+      userDataBase64: SGkuXG4=
+    name: cloudinit
