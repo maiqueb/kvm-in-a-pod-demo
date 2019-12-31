@@ -14,6 +14,7 @@ export GOPATH=~/go/
 export KUBEVIRT_PROVIDER=$PROVIDER
 export KUBEVIRT_NUM_NODES=$NUM_NODES
 export KUBEVIRT_NUM_SECONDARY_NICS=1
+export KUBECONFIG=$($KUBEVIRT_REPO_ROOT/cluster-up/kubeconfig.sh)
 
 function launch_cluster {
     cluster_containers=$(docker ps -q -f name="^$PROVIDER*")
