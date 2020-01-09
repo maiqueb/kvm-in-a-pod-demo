@@ -29,6 +29,7 @@ function launch_cluster {
 
 function build_macvtap_device_plugin {
     cd $MACVTAP_DEVICE_PLUGIN_ROOT
+    make build
     REGISTRY="$(get_registry)" make docker-build-network-macvtap
     REGISTRY="$(get_registry)" make docker-push-network-macvtap
 }
