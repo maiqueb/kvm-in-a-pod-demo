@@ -1,0 +1,97 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvtap
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: macvtap.network.kubevirt.io/eth0
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvtap",
+      "master": "eth0",
+      "mode": "bridge"
+    }'
+---
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstance
+metadata:
+  name: vm1
+spec:
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: rootfs
+      - disk:
+          bus: virtio
+        name: cloudinit
+      interfaces:
+      - masquerade: {}
+        name: default
+      - macvtap: {}
+        name: macvtap
+    machine:
+      type: ""
+    resources:
+      requests:
+        memory: 1024M
+  networks:
+  - name: default
+    pod: {}
+  - multus:
+      networkName: macvtap
+    name: macvtap
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: registry:5000/kubevirt/fedora-cloud-container-disk-demo:devel
+    name: rootfs
+  - cloudInitNoCloud:
+      userData: |
+        #!/bin/bash
+        echo "fedora" |passwd fedora --stdin
+        dhclient eth1
+    name: cloudinit
+---
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachineInstance
+metadata:
+  name: vm2
+spec:
+  domain:
+    devices:
+      disks:
+      - disk:
+          bus: virtio
+        name: rootfs
+      - disk:
+          bus: virtio
+        name: cloudinit
+      interfaces:
+      - masquerade: {}
+        name: default
+      - macvtap: {}
+        name: macvtap
+    machine:
+      type: ""
+    resources:
+      requests:
+        memory: 1024M
+  networks:
+  - name: default
+    pod: {}
+  - multus:
+      networkName: macvtap
+    name: macvtap
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - containerDisk:
+      image: registry:5000/kubevirt/fedora-cloud-container-disk-demo:devel
+    name: rootfs
+  - cloudInitNoCloud:
+      userData: |
+        #!/bin/bash
+        echo "fedora" |passwd fedora --stdin
+        dhclient eth1
+    name: cloudinit
