@@ -28,6 +28,9 @@ spec:
       interfaces:
       - masquerade: {}
         name: default
+        ports:
+        - name: ssh
+          port: 22
       - macvtap: {}
         name: macvtap
     machine:
@@ -70,6 +73,9 @@ spec:
       interfaces:
       - masquerade: {}
         name: default
+        ports:
+        - name: ssh
+          port: 22
       - macvtap: {}
         name: macvtap
     machine:
