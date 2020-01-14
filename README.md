@@ -11,11 +11,34 @@ We encourage prospective users to try out the demo, and use the provided
 [manifests](two_macvtap_fedora_vms.yaml) as reference for more advanced
 use cases.
 
-# Usage
-TODO
-
 # Installation
-TODO
+To be able to run the demo, you'll need to clone the following repos:
+  - [kubevirt](https://github.com/kubevirt/kubevirt/):
+    `git clone https://github.com/maiqueb/kubevirt/ -branch add_macvtap_binding_mech`
+  - [macvtap-cni](https://github.com/maiqueb/macvtap-cni):
+    `git clone https://github.com/maiqueb/macvtap-cni`
+  - [macvtap-device-plugin](https://github.com/jcaamano/macvtap-device-plugin/):
+    `git clone https://github.com/jcaamano/macvtap-device-plugin/`
+
+# Usage
+Once you've cloned the repositories described in [installation](#installation),
+you can run the following scripts:
+
+```bash
+# start a kubernetes cluster w/ kubevirt / multus / macvtap device plugin
+# already configured.
+# It defaults to 2 nodes, and the k8s-multus-1.13.3 provider.
+KUBEVIRT_REPO=<kubevirt_repo_location> \
+    MACVTAP_PLUGIN_REPO=<macvtap_device_plugin_repo_location> \
+    ./start_cluster.sh
+```
+
+Once your k8s cluster is started, you can execute the following script:
+```bash
+# Deploy the CNI plugin in the cluster nodes
+# It defaults to the k8s-multus-1.13.3 provider.
+KUBEVIRT_REPO=<kubevirt_repo_location> ./prepare_node.sh
+```
 
 # How this works
 In this demo we spawn two fedora VMs using multus to plug an extra
