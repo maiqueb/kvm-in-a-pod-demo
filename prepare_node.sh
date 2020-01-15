@@ -5,12 +5,16 @@ GO_PKG="go1.13.4.linux-amd64"
 
 # overrideable stuff
 KUBEVIRT_REPO_ROOT="${KUBEVIRT_REPO:-$HOME/kubernetes/kubevirt}"
-NUM_NODES="${NODE_NUMBER:-2}"
 PROVIDER="${PROVIDER:-k8s-multus-1.13.3}"
 
+NODES=$(
+    kubectl get nodes --template='{{range .items}}{{.metadata.name}} {{end}}'
+)
+
 export KUBEVIRT_PROVIDER=$PROVIDER
-export KUBEVIRT_NUM_NODES=$NUM_NODES
 export KUBEVIRT_NUM_SECONDARY_NICS=1
+export KUBECONFIG=$($KUBEVIRT_REPO_ROOT/cluster-up/kubeconfig.sh)
+
 
 function install_dependencies {
     "$KUBEVIRT_REPO_ROOT"/cluster-up/ssh.sh $1 "
@@ -36,8 +40,8 @@ function install_macvtap_cni {
     "
 }
 
-for i in `seq 1 $NUM_NODES`; do
-    node_name="node0$i"
+for node_name in $NODES; do
+    echo "Will install macvtap CNI for $node_name."
     install_dependencies $node_name
     install_golang $node_name
     install_macvtap_cni $node_name
