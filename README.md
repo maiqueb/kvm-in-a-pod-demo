@@ -11,6 +11,13 @@ We encourage prospective users to try out the demo, and use the provided
 [manifests](two_macvtap_fedora_vms.yaml) as reference for more advanced
 use cases.
 
+# Requirements
+  - kubectl: Please follow their installation guide, located
+    [here](https://kubernetes.io/docs/tasks/tools/install-kubectl/).
+  - virtctl: Please follow their installation guide, located
+    [here](https://kubevirt.io/user-guide/docs/latest/administration/intro.html#client-side-virtctl-deployment).
+  - [docker](https://docs.docker.com/install/) / [podman](https://podman.io/getting-started/installation)
+
 # Installation
 To be able to run the demo, you'll need to clone the following repos:
   - [kubevirt](https://github.com/kubevirt/kubevirt/):
@@ -38,6 +45,42 @@ Once your k8s cluster is started, you can execute the following script:
 # Deploy the CNI plugin in the cluster nodes
 # It defaults to the k8s-multus-1.13.3 provider.
 KUBEVIRT_REPO=<kubevirt_repo_location> ./prepare_node.sh
+```
+
+Once the cluster is deployed, and the macvtap CNI plugin is installed in the
+cluster nodes, the example scenario can be provisioned. That is done via
+kubectl:
+
+```bash
+# export the k8s configuration
+export KUBECONFIG=$(<kubevirt_repo_location>/cluster-up/kubeconfig.sh)
+
+# run the scenario
+kubectl create -f two_macvtap_fedora_vms.yaml
+```
+
+Afterwards, you'll have the virt-launcher pods and the vmi objects in the
+default namespace:
+
+```bash
+# list all pods in the default namespace
+kubectl get pods
+NAME                                  READY   STATUS    RESTARTS   AGE
+device-plugin-network-macvtap-44lbw   1/1     Running   0          3h8m
+device-plugin-network-macvtap-9pglq   1/1     Running   0          3h8m
+local-volume-provisioner-88sh9        1/1     Running   0          3h14m
+local-volume-provisioner-vkcr4        1/1     Running   0          3h14m
+virt-launcher-vm1-5jx2p               2/2     Running   0          14s
+virt-launcher-vm2-x2hm4               2/2     Running   0          14s
+
+# list all vmi objects in the default namespace
+kubectl get vmis
+NAME   AGE   PHASE     IP            NODENAME
+vm1    33s   Running   10.244.1.18   node02
+vm2    33s   Running   10.244.1.17   node02
+
+# connect to a vm via virtctl
+virtctl console --kubeconfig=<path to kubeconfig> vm1
 ```
 
 # How this works
@@ -72,5 +115,3 @@ The overall flow happens as follows:
 # Acknowledgements
 TODO
 
-# Requirements
-TODO
