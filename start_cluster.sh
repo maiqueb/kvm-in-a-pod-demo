@@ -10,7 +10,6 @@ export GOPATH=~/go/
 export KUBEVIRT_PROVIDER=$PROVIDER
 export KUBEVIRT_NUM_NODES=$NUM_NODES
 export KUBEVIRT_NUM_SECONDARY_NICS=1
-export KUBECONFIG=$($KUBEVIRT_REPO_ROOT/cluster-up/kubeconfig.sh)
 
 kubectl="$KUBEVIRT_REPO_ROOT/cluster-up/kubectl.sh"
 
