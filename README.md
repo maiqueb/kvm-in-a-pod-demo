@@ -66,6 +66,9 @@ The overall flow happens as follows:
     the macvtap interface name, from which libvirt obtains the associated tap
     device, which is finally passed on to qemu.
 
+## Example
+[![asciicast](https://asciinema.org/a/qBNOF3twp5MO97CKTAHDnZtJq.png)](https://asciinema.org/a/qBNOF3twp5MO97CKTAHDnZtJq)
+
 # Acknowledgements
 TODO
 
