@@ -91,11 +91,15 @@ The multus network-attachment-definition uses macvtap cni plus a resource
 exposed by the macvtap device plugin to provide a macvtap interface which will
 be used by the VMs.
 
+Refer to the image below to better understand the flow.
+
+![flow_diagram](/images/kvm-in-pod-flow-diagram.png)
+
 The overall flow happens as follows:
   - KubeVirt takes the resource in the network attachment definition and places
     it as a resource request in the pod definition.
-  - before the pod is spawned, kubelet requests the resource to the macvtap
-    device plugin.
+  - before the pod is spawned, kubelet(k8s agent) requests the resource to the
+    macvtap device plugin.
   - the macvtap device plugin allocates a new macvtap interface, and grants the
     pod access to the corresponding /dev/tapX character device - via cgroups.
   - Multus obtains the macvtap resource allocated to the pod from kubelet - via
