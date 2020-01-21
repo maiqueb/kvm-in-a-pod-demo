@@ -83,6 +83,58 @@ vm2    33s   Running   10.244.1.17   node02
 virtctl console --kubeconfig=<path to kubeconfig> vm1
 ```
 
+# Configuration cookbook
+
+## Configure the device plugin
+The following yaml is an example of how to configure the device plugin to
+expose a macvtap resource named `eth0`, whose lower device is `eth0`.
+The macvtap interface will be configured in mode `bridge`, and kubelet will
+schedule at most `50` macvtap interfaces on top of that lower device.
+
+```yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: macvtapdp-config
+data:
+  DP_MACVTAP_CONF: >-
+    [ {
+        "name" : "eth0",
+        "master" : "eth0",
+        "mode": "bridge",
+        "capacity" : 50
+     } ]
+```
+
+## Request a macvtap resource from the device plugin
+The network-attachment-definition defined in this demo's
+[scenario](two_macvtap_fedora_vms.yaml) - copied below, for your convinience -
+can be used to request a resource from the device plugin when a VMI is
+scheduled.
+
+Notice the requested resouce in the `annotations` section; there, a request
+of type `macvtap.network.kubevirt.io` is requested, whose name is `eth0`. This
+directly refers the resource exposed in the
+[previous-section](#configure-the-device-plugin).
+
+The `config` part of the spec has information about the required CNI plugin -
+macvtap - and also allows for the configuration of the network's MTU.
+
+```yaml
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: macvtap
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: macvtap.network.kubevirt.io/eth0
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvtap",
+      "mtu": 1500
+    }'
+```
+
 # How this works
 In this demo we spawn two fedora VMs using multus to plug an extra
 macvtap interface into the pod.
@@ -98,14 +150,16 @@ Refer to the image below to better understand the flow.
 The overall flow happens as follows:
   - KubeVirt takes the resource in the network attachment definition and places
     it as a resource request in the pod definition.
-  - before the pod is spawned, kubelet(k8s agent) requests the resource to the
-    macvtap device plugin.
-  - the macvtap device plugin allocates a new macvtap interface, and grants the
-    pod access to the corresponding /dev/tapX character device - via cgroups.
-  - Multus obtains the macvtap resource allocated to the pod from kubelet - via
-    the macvtap interface name - and passes it to macvtap CNI as `deviceID`
-    attribute.
-  - the macvtap cni makes this interface available in the pods namespace and
+  - before the pod is spawned, kubelet requests the resource to the macvtap
+    device plugin.
+  - the macvtap device plugin allocates a new macvtap interface, and returns
+    its name to kubelet, which grants the pod access to the corresponding
+    /dev/tapX character device - via cgroups.
+  - Multus CNI is then requested to add the interface; it learns the interface
+    name from kubelet, and calls the macvtap CNI plugin, adding the `deviceID`
+    parameter - in which it'll pass the name of the macvtap interface created
+    by the device plugin.
+  - the macvtap cni makes this interface available in the pod's namespace and
     performs further configuration on it.
   - KubeVirt generates the domxml libvirt will require to plug the character
     device into the VM as a virtio interface.
